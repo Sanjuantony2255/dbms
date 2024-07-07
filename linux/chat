@@ -1,0 +1,697 @@
+1.Develop a SQL query to list the departmentno and number of staff in each department
+
+
+ans
+
+SELECT d.departmentno, COUNT(e.employee_id) AS num_staff
+FROM departments d
+LEFT JOIN employees e ON d.departmentno = e.departmentno
+GROUP BY d.departmentno;
+
+
+2.Develop a SQL query to list the details of staff who earn the AVG basic pay of all staff.
+
+ans
+
+SELECT * FROM staff
+WHERE basic_pay = (SELECT AVG(basic_pay) FROM staff);
+
+3.Develop a SQL query to list the details of Depts which has more than 5 staff working in it.
+
+ans
+
+SELECT d.*
+FROM Depts d
+JOIN Staff s ON d.DeptID = s.DeptID
+GROUP BY d.DeptID, d.DeptName, d.DeptLocation  -- Assuming these are the details of departments
+HAVING COUNT(s.StaffID) > 5;
+
+4.Develop a SQL query to list the details of staff who have skills with a charge out rate greater than 60 per hour.
+
+ans
+
+SELECT s.*
+FROM staff s
+JOIN skills_rates sr ON s.staff_id = sr.staff_id
+JOIN skills sk ON sr.skill_id = sk.skill_id
+WHERE sr.charge_out_rate > 60;
+
+5.Develop a SQL query to list the details of customers who have a saving account and a current account.
+
+ans
+
+SELECT c.*
+FROM customers c
+JOIN accounts a1 ON c.customer_id = a1.customer_id
+JOIN accounts a2 ON c.customer_id = a2.customer_id
+WHERE a1.account_type = 'saving'
+  AND a2.account_type = 'current';
+
+6.Develop a SQL query to list the details of branches and the number of accounts in each branch.
+
+ans
+
+SELECT b.branch_id, b.branch_name, COUNT(a.account_id) AS num_accounts
+FROM branches b
+LEFT JOIN accounts a ON b.branch_id = a.branch_id
+GROUP BY b.branch_id, b.branch_name
+ORDER BY b.branch_id;
+
+7.Develop a SQL query to list the details of branches where the number of accounts is less than the average number of accounts in all branches.
+
+SELECT b.branch_id, b.branch_name, COUNT(a.account_id) AS num_accounts
+FROM branches b
+LEFT JOIN accounts a ON b.branch_id = a.branch_id
+GROUP BY b.branch_id, b.branch_name
+HAVING COUNT(a.account_id) < (
+    SELECT AVG(num_accounts)
+    FROM (
+        SELECT COUNT(account_id) AS num_accounts
+        FROM accounts
+        GROUP BY branch_id
+    ) AS avg_accounts
+);
+
+
+8.Develop a SQL query to list the details of customers who have performed three transactions in a day.
+
+
+SELECT c.*
+FROM customers c
+JOIN (
+    SELECT customer_id
+    FROM transactions
+    WHERE DATE(transaction_date) = DATE(NOW())  -- Adjust based on your SQL dialect for date comparison
+    GROUP BY customer_id
+    HAVING COUNT(*) = 3
+) AS t ON c.customer_id = t.customer_id;
+
+
+
+
+
+
+qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3
+
+
+
+
+
+
+    Departments that offer more than 3 branches:
+
+sql
+
+SELECT D.Dno, D.Dname
+FROM Department D
+JOIN Branch B ON D.Dno = B.Dno
+GROUP BY D.Dno, D.Dname
+HAVING COUNT(B.Bcode) > 3;
+
+    Departments that offer more than 6 courses:
+
+sql
+
+SELECT D.Dno, D.Dname
+FROM Department D
+JOIN Course C ON D.Dno = C.Dno
+GROUP BY D.Dno, D.Dname
+HAVING COUNT(C.Ccode) > 6;
+
+    Courses that are common for more than 3 branches:
+
+sql
+
+SELECT BC.Ccode, C.Cname
+FROM Branch_Course BC
+JOIN Course C ON BC.Ccode = C.Ccode
+GROUP BY BC.Ccode, C.Cname
+HAVING COUNT(BC.Bcode) > 3;
+
+    Students who got 'S' in more than 2 courses during single enrollment:
+
+sql
+
+SELECT E.Rollno, S.Name
+FROM Enrolls E
+JOIN Student S ON E.Rollno = S.Rollno
+WHERE E.Grade = 'S'
+GROUP BY E.Rollno, S.Name
+HAVING COUNT(*) > 2;
+
+
+
+
+engggggggggggggggggggggggggg
+
+
+
+-- Create Product table
+CREATE TABLE Product (
+    Prodid INT PRIMARY KEY,
+    Prodesc VARCHAR(255),
+    Price DECIMAL(10, 2),
+    Stock INT
+);
+
+-- Create Purchase table
+CREATE TABLE Purchase (
+    Purid INT PRIMARY KEY,
+    Proid INT,
+    qty INT,
+    supplierName VARCHAR(100),
+    FOREIGN KEY (Proid) REFERENCES Product(Prodid)
+);
+
+-- Create Sales table
+CREATE TABLE Sales (
+    Saleid VARCHAR(10) PRIMARY KEY,
+    Proid INT,
+    qty INT,
+    custname VARCHAR(100),
+    FOREIGN KEY (Proid) REFERENCES Product(Prodid)
+);
+
+-- Populate Product table
+INSERT INTO Product (Prodid, Prodesc, Price, Stock) VALUES
+(1, 'Product A', 100.00, 50),
+(2, 'Product B', 75.50, 100),
+(3, 'Product C', 120.25, 25),
+(4, 'Product D', 150.75, 75);
+
+-- Populate Purchase table
+INSERT INTO Purchase (Purid, Proid, qty, supplierName) VALUES
+(1, 1, 10, 'Supplier 1'),
+(2, 2, 5, 'Supplier 2'),
+(3, 1, 8, 'Supplier 3'),
+(4, 3, 15, 'Supplier 1'),
+(5, 4, 20, 'Supplier 2');
+
+-- Populate Sales table
+INSERT INTO Sales (Saleid, Proid, qty, custname) VALUES
+('S001', 1, 3, 'Customer A'),
+('S002', 2, 2, 'Customer B'),
+('S003', 1, 5, 'Customer C'),
+('S004', 3, 10, 'Customer A');
+
+Part c: Include Constraint on Saleid
+
+Add a constraint to ensure Saleid starts with the letter 'S':
+
+sql
+
+ALTER TABLE Sales
+ADD CONSTRAINT chk_saleid_format CHECK (LEFT(Saleid, 1) = 'S');
+
+Part d: Display ProdIDs of Products Purchased More Than 5 Times
+
+sql
+
+SELECT Proid
+FROM Purchase
+GROUP BY Proid
+HAVING COUNT(*) > 5;
+
+Part e: Create a View
+
+Create a view to track Prodid, Price, Purid, qty, and customerName:
+
+sql
+
+CREATE VIEW Product_Purchase_View AS
+SELECT p.Prodid, p.Price, pr.Purid, pr.qty, s.custname
+FROM Product p
+JOIN Purchase pr ON p.Prodid = pr.Proid
+JOIN Sales s ON p.Prodid = s.Proid;
+
+Part f: Create Sequence for Prodid
+
+Create a sequence named Product_Sequence:
+
+sql
+
+CREATE SEQUENCE Product_Sequence
+    START WITH 10
+    INCREMENT BY 10
+    NO MAXVALUE
+    NO CYCLE;
+
+Use this sequence for inserting values into the Product table:
+
+sql
+
+INSERT INTO Product (Prodid, Prodesc, Price, Stock)
+VALUES (NEXT VALUE FOR Product_Sequence, 'New Product', 99.99, 50);
+
+Part g: Develop a Procedure
+
+Create a procedure named Product_Purchase:
+
+sql
+
+CREATE PROCEDURE Product_Purchase (@purchase_id INT)
+AS
+BEGIN
+    SELECT p.Prodid, p.Prodesc, pr.qty, p.Price
+    FROM Product p
+    JOIN Purchase pr ON p.Prodid = pr.Proid
+    WHERE pr.Purid = @purchase_id;
+END;
+
+
+
+
+
+
+qqqqqqqqqqqqqqqqqqqqqqqqqqqq2
+
+
+
+
+
+
+-- Create STAFF table
+CREATE TABLE STAFF (
+    STAFFNO INT PRIMARY KEY,
+    NAME VARCHAR(100),
+    DOB DATE,
+    GENDER CHAR(1) CHECK (GENDER IN ('M', 'F')),
+    DOJ DATE,
+    DESIGNATION VARCHAR(100),
+    BASIC_PAY DECIMAL(10, 2),
+    DEPTNO INT,
+    CONSTRAINT fk_deptno FOREIGN KEY (DEPTNO) REFERENCES DEPT(DEPTNO)
+);
+
+-- Create DEPT table
+CREATE TABLE DEPT (
+    DEPTNO INT PRIMARY KEY,
+    NAME VARCHAR(100)
+);
+
+-- Create SKILL table
+CREATE TABLE SKILL (
+    SKILL_CODE INT PRIMARY KEY,
+    DESCRIPTION VARCHAR(255),
+    CHARGE_OUTRATE DECIMAL(10, 2)
+);
+
+-- Create STAFF_SKILL table
+CREATE TABLE STAFF_SKILL (
+    STAFFNO INT,
+    SKILL_CODE INT,
+    PRIMARY KEY (STAFFNO, SKILL_CODE),
+    CONSTRAINT fk_staffno FOREIGN KEY (STAFFNO) REFERENCES STAFF(STAFFNO),
+    CONSTRAINT fk_skillcode FOREIGN KEY (SKILL_CODE) REFERENCES SKILL(SKILL_CODE)
+);
+
+-- Create PROJECT table
+CREATE TABLE PROJECT (
+    PROJECTNO INT PRIMARY KEY,
+    PNAME VARCHAR(100),
+    START_DATE DATE,
+    END_DATE DATE,
+    BUDGET DECIMAL(12, 2),
+    PROJECT_MANAGER_STAFFNO INT,
+    CONSTRAINT fk_manager FOREIGN KEY (PROJECT_MANAGER_STAFFNO) REFERENCES STAFF(STAFFNO)
+);
+
+-- Create WORKS table
+CREATE TABLE WORKS (
+    STAFFNO INT,
+    PROJECTNO INT,
+    DATE_WORKED_ON DATE,
+    IN_TIME TIME,
+    OUT_TIME TIME,
+    PRIMARY KEY (STAFFNO, PROJECTNO, DATE_WORKED_ON),
+    CONSTRAINT fk_works_staff FOREIGN KEY (STAFFNO) REFERENCES STAFF(STAFFNO),
+    CONSTRAINT fk_works_project FOREIGN KEY (PROJECTNO) REFERENCES PROJECT(PROJECTNO)
+);
+
+-- Populate DEPT table
+INSERT INTO DEPT (DEPTNO, NAME) VALUES
+(1, 'HR'),
+(2, 'IT'),
+(3, 'Finance');
+
+-- Populate SKILL table
+INSERT INTO SKILL (SKILL_CODE, DESCRIPTION, CHARGE_OUTRATE) VALUES
+(1, 'Programming', 100.00),
+(2, 'Database Management', 90.00),
+(3, 'Project Management', 120.00);
+
+-- Populate STAFF table
+INSERT INTO STAFF (STAFFNO, NAME, DOB, GENDER, DOJ, DESIGNATION, BASIC_PAY, DEPTNO) VALUES
+(1, 'John Doe', '1990-05-15', 'M', '2010-01-01', 'Manager', 5000.00, 1),
+(2, 'Jane Smith', '1985-08-20', 'F', '2012-03-10', 'Developer', 4000.00, 2),
+(3, 'Michael Brown', '1992-11-30', 'M', '2015-06-15', 'Analyst', 3500.00, 1),
+(4, 'Emily Davis', '1993-04-25', 'F', '2016-02-20', 'Tester', 3000.00, 2);
+
+-- Populate STAFF_SKILL table
+INSERT INTO STAFF_SKILL (STAFFNO, SKILL_CODE) VALUES
+(1, 1),
+(1, 3),
+(2, 1),
+(2, 2),
+(3, 2),
+(3, 3),
+(4, 2);
+
+-- Populate PROJECT table
+INSERT INTO PROJECT (PROJECTNO, PNAME, START_DATE, END_DATE, BUDGET, PROJECT_MANAGER_STAFFNO) VALUES
+(101, 'Project A', '2023-01-01', '2023-06-30', 100000.00, 1),
+(102, 'Project B', '2023-02-15', '2023-08-31', 150000.00, 2),
+(103, 'Project C', '2023-03-20', '2023-12-31', 200000.00, 3);
+
+-- Populate WORKS table
+INSERT INTO WORKS (STAFFNO, PROJECTNO, DATE_WORKED_ON, IN_TIME, OUT_TIME) VALUES
+(1, 101, '2023-01-05', '09:00:00', '18:00:00'),
+(1, 101, '2023-01-06', '09:30:00', '17:30:00'),
+(2, 102, '2023-02-20', '10:00:00', '18:00:00'),
+(2, 102, '2023-02-21', '10:30:00', '17:30:00'),
+(3, 101, '2023-01-05', '09:00:00', '17:00:00'),
+(3, 102, '2023-02-20', '09:30:00', '18:30:00'),
+(4, 102, '2023-02-21', '10:00:00', '18:00:00');
+
+Part c: Include Constraints
+
+Constraints mentioned:
+
+    GENDER must take the Value ‘M’ or ‘F’: Already included in the STAFF table.
+    Include an index on StaffNo in Works table: We'll do this in Part g.
+
+Part d: SQL Query to List Details of Staff Who Earn Less Than the Basic Pay of All Staff
+
+sql
+
+SELECT *
+FROM STAFF S1
+WHERE S1.BASIC_PAY < ALL (SELECT BASIC_PAY FROM STAFF WHERE STAFFNO <> S1.STAFFNO);
+
+Part e: Create a View
+
+Create a view to track DeptNo, DeptName, and number of staff in each department:
+
+sql
+
+CREATE VIEW Dept_Staff_Count AS
+SELECT D.DEPTNO, D.NAME AS DeptName, COUNT(S.STAFFNO) AS Num_Staff
+FROM DEPT D
+LEFT JOIN STAFF S ON D.DEPTNO = S.DEPTNO
+GROUP BY D.DEPTNO, D.NAME;
+
+Part f: SQL Query to List Details of Staff Who Have More Than Three Skills
+
+sql
+
+SELECT S.*
+FROM STAFF S
+JOIN (
+    SELECT STAFFNO, COUNT(*) AS SkillCount
+    FROM STAFF_SKILL
+    GROUP BY STAFFNO
+    HAVING COUNT(*) > 3
+) SS ON S.STAFFNO = SS.STAFFNO;
+
+Part g: Create an Index
+
+Create an index on StaffNo in Works table:
+
+sql
+
+CREATE INDEX idx_works_staffno ON WORKS(STAFFNO);
+
+Part h: Develop a Procedure
+
+Develop a procedure named Staff_Increment that accepts staff number and increment amount as input and updates the basic pay of the staff in the staff table:
+
+sql
+
+CREATE PROCEDURE Staff_Increment (@staff_number INT, @increment_amount DECIMAL(10, 2))
+AS
+BEGIN
+    UPDATE STAFF
+    SET BASIC_PAY = BASIC_PAY + @increment_amount
+    WHERE STAFFNO = @staff_number;
+END;
+
+
+
+
+
+
+qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3.1
+
+
+
+
+-- Create DEPARTMENT table
+CREATE TABLE DEPARTMENT (
+    DEPT_NO INT PRIMARY KEY,
+    NAME VARCHAR(100),
+    MENO INT,
+    CONSTRAINT fk_meno FOREIGN KEY (MENO) REFERENCES EMPLOYEE(ENO)
+);
+
+-- Create PROJECT table
+CREATE TABLE PROJECT (
+    PROJ_NO INT PRIMARY KEY,
+    NAME VARCHAR(100),
+    DEPT_NO INT,
+    CONSTRAINT fk_deptno_proj FOREIGN KEY (DEPT_NO) REFERENCES DEPARTMENT(DEPT_NO)
+);
+
+-- Create EMPLOYEE table
+CREATE TABLE EMPLOYEE (
+    ENO INT PRIMARY KEY,
+    NAME VARCHAR(100),
+    GENDER CHAR(1) CHECK (GENDER IN ('M', 'F')),
+    DOB DATE,
+    DOJ DATE,
+    DESIGNATION VARCHAR(100),
+    BASIC DECIMAL(10, 2),
+    DEPT_NO INT,
+    PAN VARCHAR(20) UNIQUE,
+    SENO INT,
+    CONSTRAINT fk_deptno_emp FOREIGN KEY (DEPT_NO) REFERENCES DEPARTMENT(DEPT_NO),
+    CONSTRAINT fk_seno_emp FOREIGN KEY (SENO) REFERENCES EMPLOYEE(ENO)
+);
+
+-- Create WORKSFOR table
+CREATE TABLE WORKSFOR (
+    ENO INT,
+    PROJ_NO INT,
+    DATE_WORKED DATE,
+    HOURS INT,
+    PRIMARY KEY (ENO, PROJ_NO, DATE_WORKED),
+    CONSTRAINT fk_eno_works FOREIGN KEY (ENO) REFERENCES EMPLOYEE(ENO),
+    CONSTRAINT fk_projno_works FOREIGN KEY (PROJ_NO) REFERENCES PROJECT(PROJ_NO)
+);
+
+-- Populate DEPARTMENT table
+INSERT INTO DEPARTMENT (DEPT_NO, NAME, MENO) VALUES
+(1, 'HR', 101),
+(2, 'IT', 102),
+(3, 'Finance', 103);
+
+-- Populate PROJECT table
+INSERT INTO PROJECT (PROJ_NO, NAME, DEPT_NO) VALUES
+(101, 'Project A', 1),
+(102, 'Project B', 2),
+(103, 'Project C', 3);
+
+-- Populate EMPLOYEE table
+INSERT INTO EMPLOYEE (ENO, NAME, GENDER, DOB, DOJ, DESIGNATION, BASIC, DEPT_NO, PAN, SENO) VALUES
+(101, 'John Doe', 'M', '1985-05-15', '2010-01-01', 'Manager', 5000.00, 1, 'ABCDE1234F', NULL),
+(102, 'Jane Smith', 'F', '1990-08-20', '2012-03-10', 'Developer', 4000.00, 2, 'XYZ1234567', 101),
+(103, 'Michael Brown', 'M', '1988-11-30', '2015-06-15', 'Analyst', 3500.00, 1, 'PQR5678901', 101),
+(104, 'Emily Davis', 'F', '1993-04-25', '2016-02-20', 'Tester', 3000.00, 2, 'LMN8901234', 102),
+(105, 'David Lee', 'M', '1991-07-10', '2014-08-15', 'Designer', 4500.00, 3, 'JKL4567890', 103);
+
+-- Populate WORKSFOR table
+INSERT INTO WORKSFOR (ENO, PROJ_NO, DATE_WORKED, HOURS) VALUES
+(101, 101, '2023-01-05', 8),
+(102, 102, '2023-02-20', 7),
+(103, 101, '2023-01-06', 6),
+(104, 102, '2023-02-21', 8),
+(105, 101, '2023-01-05', 7),
+(105, 103, '2023-03-20', 6);
+
+Part c: Include Constraints
+
+Constraints mentioned:
+
+    GENDER must take the Value ‘M’ or ‘F’: Already included in the EMPLOYEE table.
+    PAN – Permanent account Number: Included as UNIQUE constraint in the EMPLOYEE table.
+    SENO – Supervisor Employee Number: Included as a FOREIGN KEY constraint in the EMPLOYEE table.
+    MENO - Manager Employee Number: Included as a FOREIGN KEY constraint in the DEPARTMENT table.
+
+Part d: SQL Query to List Details of Department Which Has More Than 3 Employees Working for It
+
+sql
+
+SELECT D.DEPT_NO, D.NAME AS DeptName, COUNT(*) AS NumEmployees
+FROM DEPARTMENT D
+JOIN EMPLOYEE E ON D.DEPT_NO = E.DEPT_NO
+GROUP BY D.DEPT_NO, D.NAME
+HAVING COUNT(*) > 3;
+
+Part e: Create a View
+
+Create a view to track DeptNo, DeptName, and number of employees in each department:
+
+sql
+
+CREATE VIEW Dept_Employee_Count AS
+SELECT D.DEPT_NO, D.NAME AS DeptName, COUNT(E.ENO) AS Num_Employees
+FROM DEPARTMENT D
+LEFT JOIN EMPLOYEE E ON D.DEPT_NO = E.DEPT_NO
+GROUP BY D.DEPT_NO, D.NAME;
+
+Part f: SQL Query to List Departments and Details of Manager in Each Department
+
+sql
+
+SELECT D.NAME AS DeptName, M.NAME AS ManagerName
+FROM DEPARTMENT D
+JOIN EMPLOYEE M ON D.MENO = M.ENO;
+
+Part g: Create an Index
+
+Create an index on EmpNo in WORKSFOR table:
+
+sql
+
+CREATE INDEX idx_works_empno ON WORKSFOR(ENO);
+
+Part h: Create a Database Trigger
+
+Create a trigger that prevents inserting values into EMPLOYEE table if DOJ (Date of Joining) is less than DOB (Date of Birth):
+
+sql
+
+CREATE TRIGGER trg_check_doj_dob
+BEFORE INSERT ON EMPLOYEE
+FOR EACH ROW
+BEGIN
+    IF NEW.DOJ < NEW.DOB THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Date of Joining cannot be less than Date of Birth';
+    END IF;
+END;
+
+
+
+
+
+qqqqqqqqqqqqqqqqqqq44444444444444
+
+
+
+-- Create Customer table
+CREATE TABLE Customer (
+    Custid INT PRIMARY KEY,
+    Custname VARCHAR(100),
+    Age INT,
+    phno VARCHAR(20)
+);
+
+-- Create Loan table
+CREATE TABLE Loan (
+    Loanid VARCHAR(10) PRIMARY KEY,
+    Amount DECIMAL(10, 2),
+    Custid INT,
+    CONSTRAINT fk_custid_loan FOREIGN KEY (Custid) REFERENCES Customer(Custid)
+);
+
+-- Populate Customer table
+INSERT INTO Customer (Custid, Custname, Age, phno) VALUES
+(1, 'John Doe', 35, '123-456-7890'),
+(2, 'Jane Smith', 28, '987-654-3210'),
+(3, 'Michael Brown', 40, '111-222-3333');
+
+-- Populate Loan table
+INSERT INTO Loan (Loanid, Amount, Custid) VALUES
+('L001', 5000.00, 1),
+('L002', 3000.00, 1),
+('L003', 8000.00, 2),
+('L004', 6000.00, 3);
+
+Part c: Include Constraint on Loanid
+
+Add a constraint to ensure Loanid starts with the letter 'L':
+
+sql
+
+ALTER TABLE Loan
+ADD CONSTRAINT chk_loanid_format CHECK (LEFT(Loanid, 1) = 'L');
+
+Part d: SQL Query to Display Customer IDs and Total Loan Amount Taken
+
+sql
+
+SELECT Custid, SUM(Amount) AS TotalLoanAmount
+FROM Loan
+GROUP BY Custid;
+
+Part e: SQL Query to Display CustId and CustName of Customers Who Have Taken Less Than 2 Loans
+
+sql
+
+SELECT C.Custid, C.Custname
+FROM Customer C
+WHERE C.Custid IN (
+    SELECT L.Custid
+    FROM Loan L
+    GROUP BY L.Custid
+    HAVING COUNT(*) < 2
+);
+
+Part f: Create a View
+
+Create a view to track Custid, Custname, Loanid, and Amount:
+
+sql
+
+CREATE VIEW Customer_Loan_View AS
+SELECT C.Custid, C.Custname, L.Loanid, L.Amount
+FROM Customer C
+JOIN Loan L ON C.Custid = L.Custid;
+
+Part g: Create a Sequence
+
+Create a sequence named Customer_Sequence that increments by 3:
+
+sql
+
+CREATE SEQUENCE Customer_Sequence
+    START WITH 1
+    INCREMENT BY 3
+    NO MAXVALUE
+    NO CYCLE;
+
+Use this sequence for inserting values into the Customer table:
+
+sql
+
+INSERT INTO Customer (Custid, Custname, Age, phno)
+VALUES (NEXT VALUE FOR Customer_Sequence, 'New Customer', 25, '555-123-4567');
+
+Part h: Develop a Stored Procedure
+
+Develop a stored procedure named Customer_Loan which accepts Loanid as input and displays Custid, CustName, and Amount of the loan:
+
+sql
+
+CREATE PROCEDURE Customer_Loan (@Loanid VARCHAR(10))
+AS
+BEGIN
+    SELECT C.Custid, C.Custname, L.Amount
+    FROM Customer C
+    JOIN Loan L ON C.Custid = L.Custid
+    WHERE L.Loanid = @Loanid;
+END;
+
+
+
+
