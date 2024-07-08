@@ -584,6 +584,8 @@ END;
 
 
 
+
+
 qqqqqqqqqqqqqqqqqqq44444444444444
 
 
@@ -778,3 +780,209 @@ WHERE emp_name LIKE 'A%';
 ```
 
 These SQL commands should help you achieve the tasks you outlined. Make sure to adjust the column data types and values based on your actual schema and requirements.
+
+
+Qqqqq2222
+
+Let's address each part of the task step by step.
+
+### a. Identify the foreign keys in the schema
+
+From the provided schema:
+
+- **STAFF**:
+  - Foreign key: DEPTNO references DEPT(DEPTNO)
+
+- **STAFF_SKILL**:
+  - Foreign key: STAFFNO references STAFF(STAFFNO)
+  - Foreign key: SKILL_CODE references SKILL(SKILL_CODE)
+
+- **PROJECT**:
+  - Foreign key: PROJECT_MANAGER_STAFFNO references STAFF(STAFFNO)
+
+- **WORKS**:
+  - Foreign key: STAFFNO references STAFF(STAFFNO)
+  - Foreign key: PROJECTNO references PROJECT(PROJECTNO)
+
+### b. Create and populate the tables
+
+Here are the SQL commands to create and populate the tables:
+
+#### STAFF Table
+
+```sql
+CREATE TABLE STAFF (
+    STAFFNO INT PRIMARY KEY,
+    NAME VARCHAR(100),
+    DOB DATE,
+    GENDER CHAR(1) CHECK (GENDER IN ('M', 'F')),
+    DOJ DATE,
+    DESIGNATION VARCHAR(50),
+    BASIC_PAY DECIMAL(10, 2),
+    DEPTNO INT,
+    CONSTRAINT fk_deptno FOREIGN KEY (DEPTNO) REFERENCES DEPT(DEPTNO)
+);
+
+-- Populate STAFF table
+INSERT INTO STAFF (STAFFNO, NAME, DOB, GENDER, DOJ, DESIGNATION, BASIC_PAY, DEPTNO)
+VALUES
+    (1, 'John Doe', '1990-01-15', 'M', '2010-05-20', 'Manager', 60000.00, 1),
+    (2, 'Jane Smith', '1992-03-25', 'F', '2012-08-10', 'Developer', 50000.00, 2),
+    -- Add more rows as needed
+    (3, 'Alice Brown', '1995-06-12', 'F', '2014-02-28', 'Analyst', 45000.00, 1);
+```
+
+#### DEPT Table
+
+```sql
+CREATE TABLE DEPT (
+    DEPTNO INT PRIMARY KEY,
+    NAME VARCHAR(100)
+);
+
+-- Populate DEPT table
+INSERT INTO DEPT (DEPTNO, NAME)
+VALUES
+    (1, 'Human Resources'),
+    (2, 'IT'),
+    (3, 'Finance');
+```
+
+#### SKILL Table
+
+```sql
+CREATE TABLE SKILL (
+    SKILL_CODE INT PRIMARY KEY,
+    DESCRIPTION VARCHAR(100),
+    CHARGE_OUTRATE DECIMAL(10, 2)
+);
+
+-- Populate SKILL table
+INSERT INTO SKILL (SKILL_CODE, DESCRIPTION, CHARGE_OUTRATE)
+VALUES
+    (1, 'Programming', 100.00),
+    (2, 'Database Management', 120.00),
+    -- Add more rows as needed
+    (3, 'Project Management', 150.00);
+```
+
+#### STAFF_SKILL Table
+
+```sql
+CREATE TABLE STAFF_SKILL (
+    STAFFNO INT,
+    SKILL_CODE INT,
+    PRIMARY KEY (STAFFNO, SKILL_CODE),
+    CONSTRAINT fk_staffno FOREIGN KEY (STAFFNO) REFERENCES STAFF(STAFFNO),
+    CONSTRAINT fk_skill_code FOREIGN KEY (SKILL_CODE) REFERENCES SKILL(SKILL_CODE)
+);
+
+-- Populate STAFF_SKILL table
+INSERT INTO STAFF_SKILL (STAFFNO, SKILL_CODE)
+VALUES
+    (1, 1),
+    (1, 2),
+    (2, 1),
+    -- Add more rows as needed
+    (3, 2),
+    (3, 3);
+```
+
+#### PROJECT Table
+
+```sql
+CREATE TABLE PROJECT (
+    PROJECTNO INT PRIMARY KEY,
+    PNAME VARCHAR(100),
+    START_DATE DATE,
+    END_DATE DATE,
+    BUDGET DECIMAL(12, 2),
+    PROJECT_MANAGER_STAFFNO INT,
+    CONSTRAINT fk_project_manager FOREIGN KEY (PROJECT_MANAGER_STAFFNO) REFERENCES STAFF(STAFFNO)
+);
+
+-- Populate PROJECT table
+INSERT INTO PROJECT (PROJECTNO, PNAME, START_DATE, END_DATE, BUDGET, PROJECT_MANAGER_STAFFNO)
+VALUES
+    (1, 'Project A', '2023-01-01', '2023-06-30', 100000.00, 1),
+    (2, 'Project B', '2023-02-15', '2023-08-31', 150000.00, 2),
+    -- Add more rows as needed
+    (3, 'Project C', '2023-03-10', '2023-12-31', 200000.00, 3);
+```
+
+#### WORKS Table
+
+```sql
+CREATE TABLE WORKS (
+    STAFFNO INT,
+    PROJECTNO INT,
+    DATE_WORKED_ON DATE,
+    IN_TIME TIME,
+    OUT_TIME TIME,
+    PRIMARY KEY (STAFFNO, PROJECTNO, DATE_WORKED_ON),
+    CONSTRAINT fk_works_staffno FOREIGN KEY (STAFFNO) REFERENCES STAFF(STAFFNO),
+    CONSTRAINT fk_works_projectno FOREIGN KEY (PROJECTNO) REFERENCES PROJECT(PROJECTNO)
+);
+
+-- Populate WORKS table
+INSERT INTO WORKS (STAFFNO, PROJECTNO, DATE_WORKED_ON, IN_TIME, OUT_TIME)
+VALUES
+    (1, 1, '2023-01-05', '09:00:00', '17:00:00'),
+    (2, 1, '2023-01-05', '09:30:00', '18:00:00'),
+    -- Add more rows as needed
+    (1, 2, '2023-02-20', '10:00:00', '16:30:00'),
+    (3, 3, '2023-03-15', '08:30:00', '17:30:00');
+```
+
+### c. Include constraints as mentioned above
+
+Constraints such as primary keys and foreign keys have already been included in the table definitions above. Additionally, there are CHECK constraints for GENDER in STAFF table.
+
+### d. SQL query to list the details of staff who earn less than the basic pay of all staff
+
+```sql
+SELECT *
+FROM STAFF s
+WHERE s.BASIC_PAY < (SELECT MAX(BASIC_PAY) FROM STAFF);
+```
+
+### e. Create a view that keeps track of DeptNo, DeptName and number of staff in each department
+
+```sql
+CREATE VIEW DeptStaffCount AS
+SELECT d.DEPTNO, d.NAME AS DeptName, COUNT(s.STAFFNO) AS StaffCount
+FROM DEPT d
+LEFT JOIN STAFF s ON d.DEPTNO = s.DEPTNO
+GROUP BY d.DEPTNO, d.NAME;
+```
+
+### f. SQL query to list the details of staff who have more than three skills
+
+```sql
+SELECT s.*
+FROM STAFF s
+WHERE (SELECT COUNT(*) FROM STAFF_SKILL WHERE STAFFNO = s.STAFFNO) > 3;
+```
+
+### g. Create an index on StaffNo in Works table
+
+```sql
+CREATE INDEX idx_staffno ON WORKS(STAFFNO);
+```
+
+### h. Develop a procedure Staff_Increment that will accept staff number and increment amount as input and update the basic pay of the staff in the staff table
+
+```sql
+DELIMITER //
+
+CREATE PROCEDURE Staff_Increment(IN staff_num INT, IN increment DECIMAL(10, 2))
+BEGIN
+    UPDATE STAFF
+    SET BASIC_PAY = BASIC_PAY + increment
+    WHERE STAFFNO = staff_num;
+END//
+
+DELIMITER ;
+```
+
+These SQL commands and procedures should cover all the requirements based on the provided schema and tasks. Adjust column data types and constraints as necessary based on your specific database environment.
