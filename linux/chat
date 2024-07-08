@@ -694,4 +694,87 @@ END;
 
 
 
+Qqq
+Here are the SQL commands to perform the tasks you've outlined:
 
+### Display the structure of the Employee table and Department table
+
+```sql
+-- Employee table structure
+DESCRIBE Employee;
+
+-- Department table structure
+DESCRIBE Department;
+```
+
+### Add a new column ‘Designation’ to the table Employee
+
+```sql
+ALTER TABLE Employee
+ADD COLUMN Designation varchar(50); -- Assuming 'Designation' is a varchar field
+```
+
+### Drop the column ‘location’ from Department table
+
+```sql
+ALTER TABLE Department
+DROP COLUMN location;
+```
+
+### Add at least 10 rows into the table Employee and Department
+
+Assuming you know the exact values, here's a template to insert rows:
+
+```sql
+-- Inserting into Employee table
+INSERT INTO Employee (emp_no, emp_name, dob, address, mobile_no, dept_no, salary, Designation)
+VALUES
+    ('E001', 'John Doe', '1990-05-15', '123 Main St, City', 9876543210, 'D01', 60000, 'Manager'),
+    ('E002', 'Jane Smith', '1992-08-20', '456 Elm St, Town', 8765432109, 'D02', 50000, 'Developer'),
+    -- Add more rows as needed
+    ('E010', 'Alice Brown', '1995-03-10', '789 Oak Ave, Village', 7654321098, 'D03', 45000, 'Analyst');
+
+-- Inserting into Department table
+INSERT INTO Department (dept_no, dept_name)
+VALUES
+    ('D01', 'Human Resources'),
+    ('D02', 'IT'),
+    -- Add more rows as needed
+    ('D03', 'Finance');
+```
+
+### Display all the records from the Employee and Department tables
+
+```sql
+-- Display all records from Employee table
+SELECT * FROM Employee;
+
+-- Display all records from Department table
+SELECT * FROM Department;
+```
+
+### Display the emp_no and name of employees from department no ‘D02’
+
+```sql
+SELECT emp_no, emp_name
+FROM Employee
+WHERE dept_no = 'D02';
+```
+
+### Display emp_no, emp_name, designation, dept_no, and salary of employees in descending order of salary
+
+```sql
+SELECT emp_no, emp_name, Designation, dept_no, salary
+FROM Employee
+ORDER BY salary DESC;
+```
+
+### Retrieve the name, mobile number of all employees whose name starts with “A”
+
+```sql
+SELECT emp_name, mobile_no
+FROM Employee
+WHERE emp_name LIKE 'A%';
+```
+
+These SQL commands should help you achieve the tasks you outlined. Make sure to adjust the column data types and values based on your actual schema and requirements.
